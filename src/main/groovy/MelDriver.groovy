@@ -51,7 +51,7 @@ def obtainAuthToken() {
             contentType: "application/json; charset=UTF-8",
             body       : JsonOutput.toJson(body)
     ]
-    def authCode = ""
+    def authCode = null
 
     try {
 
@@ -63,12 +63,15 @@ def obtainAuthToken() {
                 }
     }
     catch (Exception e) {
-        log.error("obtainAuthToken: Unable to query Mitsubishi Electric MELCloud: ${e}")
+        log.warning("obtainAuthToken: Unable to query Mitsubishi Electric MELCloud: ${e}")
     }
     return authCode
 }
 
 def getListDevices() {
+    if (state.authCode==null) {
+        log.warning("Not authenticated")
+    }
 
     def data = null
     def headers = [

@@ -69,7 +69,7 @@ class TestMelDriver extends GroovyTestCase {
         def driver = getMelDriver()
         String authCode = driver.obtainAuthToken()
         log.info "authCode: $authCode"
-        assert !authCode.empty
+        assertNotNull authCode
     }
 
     def get_authDriver() {
