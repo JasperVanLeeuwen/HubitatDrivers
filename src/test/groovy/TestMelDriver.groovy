@@ -23,6 +23,9 @@ class TestMelDriver extends GroovyTestCase {
 
     void testProperties() {
         InputStream  prop_stream = TestMelDriver.class.getClassLoader().getResourceAsStream("mymelcloud.properties")
+        if (prop_stream==null) {
+            log.warning("please create a file called 'mymelcloud.properties' in src\\test\\resources based on 'melcloud.properties'")
+        }
         assertNotNull prop_stream
 
         Properties props = new Properties()
