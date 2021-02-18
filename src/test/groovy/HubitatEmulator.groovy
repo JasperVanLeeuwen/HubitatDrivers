@@ -1,4 +1,5 @@
 import groovyx.net.http.RESTClient
+import org.apache.commons.lang.NotImplementedException
 import org.apache.logging.log4j.LogManager
 
 
@@ -24,7 +25,6 @@ abstract class HubitatEmulator extends Script {
             def test = resp.data
             closure(['data':data])};
         new RESTClient().get(prms, doCall)
-        //new HTTPBuilder().post()
     }
 
     /*
@@ -78,6 +78,7 @@ abstract class HubitatEmulator extends Script {
      */
     def addChildDevice(String namespace, String typeName, String deviceNetworkId, Map properties = [:]){
         //TODO implement
+        throw new NotImplementedException()
         return null
     }
 
