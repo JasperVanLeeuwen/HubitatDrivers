@@ -24,10 +24,15 @@ def initialize() {
 }
 
 def refresh() {
-    state.authCode = obtainAuthToken()
+    try {
+        state.authCode = obtainAuthToken()
+    }
+    catch (Exception e) {
+        log.warning("refresh: Unable to query Mitsubishi Electric MELCloud: ${e}")
+    }
 }
 
-def obtainAuthToken() {
+def obtainAuthToken() throws Exception {
     def body = [
             Email: UserName,
             Password: Password,
@@ -53,24 +58,20 @@ def obtainAuthToken() {
     ]
     def authCode = null
 
-    try {
+    httpPost(postParams)
+            { resp ->
+                log.info("obtainAuthToken: ${resp.data}")
+                authCode = resp?.data?.LoginData?.ContextKey
+                log.info "obtainAuthToken: ContextKey - ${authCode}"
+            }
 
-        httpPost(postParams)
-                { resp ->
-                    log.info("obtainAuthToken: ${resp.data}")
-                    authCode = resp?.data?.LoginData?.ContextKey
-                    log.info "obtainAuthToken: ContextKey - ${authCode}"
-                }
-    }
-    catch (Exception e) {
-        log.warning("obtainAuthToken: Unable to query Mitsubishi Electric MELCloud: ${e}")
-    }
     return authCode
 }
 
 def getListDevices() {
     if (state.authCode==null) {
         log.warning("Not authenticated")
+        return
     }
 
     def data = null
