@@ -11,4 +11,6 @@ Based on https://github.com/sburke781/hubitat (much appreciated!)
 `melcloud.properties` to be able to run tests
 
 ## WeerOnlineHubitatDriver
- 
+WeerLive TemperatureMeasurement Driver for Hubitat Elevation, provides dutch weather forecast
+
+Uses http://weerlive.nl/ (requires: api key and location, to be set in Driver configuration)
