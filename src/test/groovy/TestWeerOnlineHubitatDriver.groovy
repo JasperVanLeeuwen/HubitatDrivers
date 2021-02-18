@@ -10,7 +10,7 @@ class TestWeerOnlineHubitatDriver extends GroovyTestCase {
 
 
         shell.evaluate 'z=2*x+y'
-        def anObject = shell.parse(new File("src/main/groovy/nu/leeuwen/hubitat/WeerOnlineHubitatDriver.groovy"))
+        def anObject = shell.parse(new File("src/main/groovy/WeerOnlineHubitatDriver.groovy"))
         System.print anObject.getThisCopyright()
         anObject.metaClass.test = {-> "aaaargh"}
         assertEquals(anObject.getThisCopyright(),"a")
