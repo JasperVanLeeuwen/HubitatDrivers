@@ -44,8 +44,13 @@ class TestMelDriver extends GroovyTestCase {
     def get_authDriver() {
         if (auth_driver==null) {
             HubitatHubEmulator hub = new HubitatHubEmulator()
-            def melType = "\"MelDriver Parent Driver for Melcloud\""
+
+            def melType = "MelDriver Parent Driver for Melcloud"
             hub.addTypeToImplementationMap(melType, "src/main/groovy/MelDriver.groovy")
+
+            def melchildType = "MelDriver Child Driver for Melcloud"
+            hub.addTypeToImplementationMap(melchildType, "src/main/groovy/MelChildDriver.groovy")
+
             auth_driver = hub.addChildDevice("",melType,"0",getMelDriverConfig())
             auth_driver.refresh()
 
@@ -60,6 +65,12 @@ class TestMelDriver extends GroovyTestCase {
         assertNotNull devices
     }
 
+    void testRetrieveAndUpdateDevices() {
+        HubitatDeviceEmulator driver = get_authDriver()
+        driver.retrieveAndUpdateDevices()
+        def devices = driver.getChildDevices()
+        assert devices.size()>0
+    }
 
     void testJsonOutput() {
         log.warning JsonOutput.toJson([sd: "sd"])

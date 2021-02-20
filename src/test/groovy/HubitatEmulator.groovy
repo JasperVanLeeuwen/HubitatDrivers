@@ -30,12 +30,12 @@ class HubitatHubEmulator {
         }
         def binding = new Binding()
         properties.each {binding.setVariable(it.getKey(), it.getValue())}
+        binding.setVariable("hub", this)
 
         def config = new CompilerConfiguration()
         config.scriptBaseClass = 'HubitatDeviceEmulator'
         def shell = new GroovyShell(this.class.classLoader, binding, config)
         def driver = shell.parse(new File(typeToImplementationMap[typeName]))
-        driver.hub = this
         devices[deviceNetworkId] = driver
         return driver
     }
@@ -48,7 +48,7 @@ abstract class HubitatDeviceEmulator extends Script {
     /*
     Emulation functionality
      */
-    HubitatHubEmulator hub = null //hub that owns the device
+
 
     /*
     Hubitat functionality
@@ -58,7 +58,7 @@ abstract class HubitatDeviceEmulator extends Script {
     //deviceCreators [typeName:closure(String typeName, String deviceNetworkId, Map properties = [:])]
     // closure is used to create devices
     def deviceCreators = [:]
-    def metadata =  { }
+    def metadata =  null
     def state = [:]
     String Label = ""
     def log = LogManager.getLogger()
@@ -90,7 +90,7 @@ abstract class HubitatDeviceEmulator extends Script {
     ChildDeviceWrapper
      */
     def getChildDevice(String deviceNetworkId) {
-        return childDevices[deviceNetworkId]
+        return childDevices?[deviceNetworkId]
     }
 
     /*
@@ -128,6 +128,8 @@ abstract class HubitatDeviceEmulator extends Script {
     ChildDeviceWrapper
      */
     def addChildDevice(String namespace, String typeName, String deviceNetworkId, Map properties = [:]){
+        Map newProperties = properties.clone()
+        newProperties.put("parent", this)
         def device = hub.addChildDevice(namespace, typeName, deviceNetworkId, properties)
         childDevices[deviceNetworkId] = device
         return device
