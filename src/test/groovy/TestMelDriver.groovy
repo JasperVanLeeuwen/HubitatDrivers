@@ -6,7 +6,6 @@ class TestMelDriver extends GroovyTestCase {
     private Object auth_driver = null
 
 
-
     void testProperties() {
         InputStream  prop_stream = TestMelDriver.class.getClassLoader().getResourceAsStream("mymelcloud.properties")
         if (prop_stream==null) {
@@ -22,31 +21,21 @@ class TestMelDriver extends GroovyTestCase {
         assertNotNull props.getProperty("Password")
     }
 
-    Object getMelDriver() {
+    Map  getMelDriverConfig() {
         InputStream  prop_stream = TestMelDriver.class.getClassLoader().getResourceAsStream("mymelcloud.properties")
         Properties props = new Properties()
         props.load(prop_stream)
-
-        String BaseURL = props.getProperty("BaseURL")
-        String UserName = props.getProperty("UserName")
-        String Password = props.getProperty("Password")
-
-        def binding = new Binding()
-        binding.setVariable('BaseURL', BaseURL)
-        binding.setVariable('UserName', UserName)
-        binding.setVariable('Password', Password)
-        binding.setVariable('authCode', "")
-
-        def config = new CompilerConfiguration()
-        config.scriptBaseClass = 'HubitatEmulator'
-        def shell = new GroovyShell(this.class.classLoader, binding, config)
-        def driver = shell.parse(new File("src/main/groovy/MelDriver.groovy"))
-        assertNotNull(driver)
-        return driver
-
+        def config = [:]
+        props.each {config[it.key] = it.value}
+        return config
     }
+
     void testObtainAuthToken() {
-        def driver = getMelDriver()
+        HubitatHubEmulator hub = new HubitatHubEmulator()
+        def melType = "\"MelDriver Parent Driver for Melcloud\""
+        hub.addTypeToImplementationMap(melType, "src/main/groovy/MelDriver.groovy")
+        def driver = hub.addChildDevice("",melType,"0",getMelDriverConfig())
+
         String authCode = driver.obtainAuthToken()
         log.info "authCode: $authCode"
         assertNotNull authCode
@@ -54,7 +43,10 @@ class TestMelDriver extends GroovyTestCase {
 
     def get_authDriver() {
         if (auth_driver==null) {
-            auth_driver = getMelDriver()
+            HubitatHubEmulator hub = new HubitatHubEmulator()
+            def melType = "\"MelDriver Parent Driver for Melcloud\""
+            hub.addTypeToImplementationMap(melType, "src/main/groovy/MelDriver.groovy")
+            auth_driver = hub.addChildDevice("",melType,"0",getMelDriverConfig())
             auth_driver.refresh()
 
         }

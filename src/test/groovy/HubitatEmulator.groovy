@@ -1,17 +1,68 @@
 import groovyx.net.http.RESTClient
 import org.apache.commons.lang.NotImplementedException
 import org.apache.logging.log4j.LogManager
+import org.codehaus.groovy.control.CompilerConfiguration
 
+/*
+represents Hubitat hub
+ */
+class HubitatHubEmulator {
+
+    /*
+    Emulation functionality
+     */
+    def typeToImplementationMap = [:] //[typeName : implementationPath]
+
+    def addTypeToImplementationMap(String typeName, String implementationPath) {
+        typeToImplementationMap[typeName] = implementationPath
+    }
+
+
+    /*
+    Hubitat functionality
+     */
+
+    def devices = [:] //devices [deviceNetworkId: device_object]
+
+    def addChildDevice(String namespace, String typeName, String deviceNetworkId, Map properties = [:]){
+        if (!typeToImplementationMap.containsKey(typeName)) {
+            throw new RuntimeException("no implementation for ${typeName} registered")
+        }
+        def binding = new Binding()
+        properties.each {binding.setVariable(it.getKey(), it.getValue())}
+
+        def config = new CompilerConfiguration()
+        config.scriptBaseClass = 'HubitatDeviceEmulator'
+        def shell = new GroovyShell(this.class.classLoader, binding, config)
+        def driver = shell.parse(new File(typeToImplementationMap[typeName]))
+        driver.hub = this
+        devices[deviceNetworkId] = driver
+        return driver
+    }
+}
 
 /*
 Base class for Script, emulating Hubitat hub
  */
-abstract class HubitatEmulator extends Script {
+abstract class HubitatDeviceEmulator extends Script {
+    /*
+    Emulation functionality
+     */
+    HubitatHubEmulator hub = null //hub that owns the device
 
-    def childDevices = [:]
+    /*
+    Hubitat functionality
+    */
+    def parent = null //parent device
+    def childDevices = [:] //child devices [deviceNetworkId: device_object]
+    //deviceCreators [typeName:closure(String typeName, String deviceNetworkId, Map properties = [:])]
+    // closure is used to create devices
+    def deviceCreators = [:]
     def metadata =  { }
     def state = [:]
+    String Label = ""
     def log = LogManager.getLogger()
+
 
     def httpPost( prms, closure) {
         def doCall = {resp, data->
@@ -77,11 +128,8 @@ abstract class HubitatEmulator extends Script {
     ChildDeviceWrapper
      */
     def addChildDevice(String namespace, String typeName, String deviceNetworkId, Map properties = [:]){
-        //TODO implement
-        throw new NotImplementedException()
-        return null
+        def device = hub.addChildDevice(namespace, typeName, deviceNetworkId, properties)
+        childDevices[deviceNetworkId] = device
+        return device
     }
-
-
-
 }
