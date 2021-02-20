@@ -4,8 +4,10 @@ metadata {
     definition(name: "MelDriver Child Driver for Melcloud", namespace: "meldriver", author: "Jasper van Leeuwen") {
         capability "Refresh"
         capability "TemperatureMeasurement"
-        capability "Thermostat"
+        //capability "Thermostat"
         capability "thermostatMode"
+        capability "ThermostatHeatingSetpoint"
+        capability "ThermostatCoolingSetpoint"
     }
 }
 
@@ -61,6 +63,7 @@ def update(data) {
         thermostatModeTmp = "off"
     }
     thermostatMode = thermostatModeTmp
+
 
 }
 
@@ -161,4 +164,34 @@ def setThermostatMode(thermostatmode) {
             "off": {off()}
     ]
     mapThermostatmode[thermostatmode]()
+}
+/*
+setCoolingSetpoint(temperature)
+temperature required (NUMBER) - Cooling setpoint in degrees
+setHeatingSetpoint(temperature)
+*/
+def setCoolingSetpoint(temperature) {
+    thermostatSetpoint = temperature
+
+    def data = retrieveDeviceState()
+    data['SetTemperature'] = thermostatSetpoint
+    data = sendCommand(data)
+    update(data)
+}
+
+def setHeatingSetpoint(temperature) {
+    thermostatSetpoint = temperature
+
+    def data = retrieveDeviceState()
+    data['SetTemperature'] = thermostatSetpoint
+    data = sendCommand(data)
+    update(data)
+}
+
+def getCoolingSetpoint(temperature) {
+    return thermostatSetpoint
+}
+
+def getHeatingSetpoint(temperature) {
+    return thermostatSetpoint
 }

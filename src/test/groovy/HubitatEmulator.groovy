@@ -36,6 +36,7 @@ class HubitatHubEmulator {
         binding.setVariable("deviceNetworkId", deviceNetworkId)
         binding.setVariable("temperature", null) // for TemperatureMeasurement capability
         binding.setVariable("thermostatMode", null)
+        binding.setVariable("thermostatSetpoint ", null)
 
         def config = new CompilerConfiguration()
         config.scriptBaseClass = 'HubitatDeviceEmulator'
