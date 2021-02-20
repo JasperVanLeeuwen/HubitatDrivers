@@ -141,6 +141,12 @@ class TestMelDriver extends GroovyTestCase {
         assert presets.size()>0
     }
 
+    void testSetPreset() {
+        def meldevice = getMyMelDevice()
+        def childDevice = meldevice.childDevices[0]
+        def presets = childDevice.setPreset(1)
+    }
+
     void testJsonOutput() {
         log.warning JsonOutput.toJson([sd: "sd"])
     }
