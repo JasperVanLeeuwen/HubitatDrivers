@@ -26,6 +26,7 @@ def initialize() {
 def refresh() {
     try {
         state.authCode = obtainAuthToken()
+        retrieveAndUpdateDevices()
     }
     catch (Exception e) {
         log.error("refresh: Unable to query Mitsubishi Electric MELCloud: ${e}")
@@ -117,7 +118,10 @@ def updateChildDevices(buildings) {
             def childDevice = getChildDevice("vUnitId")
             if (childDevice == null) {
                 //String namespace, String typeName, String deviceNetworkId, Map properties = [:]
-                addChildDevice("meldriver", "MelDriver Child Driver for Melcloud", vUnitId, [:])
+                childDevice = addChildDevice("meldriver", "MelDriver Child Driver for Melcloud", vUnitId, ["label":vRoom])
+                childDevice.sendEvent("DeviceID", "${acUnit.DeviceID}")
+                childDevice.sendEvent("DeviceName", "${acUnit.DeviceName}")
+                childDevice.sendEvent("BuildingID", "${acUnit.BuildingID}")
             }
         }
     }

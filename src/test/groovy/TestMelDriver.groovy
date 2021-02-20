@@ -33,7 +33,7 @@ class TestMelDriver extends GroovyTestCase {
     void testObtainAuthToken() {
         HubitatHubEmulator hub = new HubitatHubEmulator()
         def melType = "\"MelDriver Parent Driver for Melcloud\""
-        hub.addTypeToImplementationMap(melType, "src/main/groovy/MelDriver.groovy")
+        hub.addTypeToImplementationMap(melType, "src/main/groovy/MelDriver.groovy",[])
         def driver = hub.addChildDevice("",melType,"0",getMelDriverConfig())
 
         String authCode = driver.obtainAuthToken()
@@ -46,10 +46,12 @@ class TestMelDriver extends GroovyTestCase {
             HubitatHubEmulator hub = new HubitatHubEmulator()
 
             def melType = "MelDriver Parent Driver for Melcloud"
-            hub.addTypeToImplementationMap(melType, "src/main/groovy/MelDriver.groovy")
+            hub.addTypeToImplementationMap(melType, "src/main/groovy/MelDriver.groovy",[])
 
             def melchildType = "MelDriver Child Driver for Melcloud"
-            hub.addTypeToImplementationMap(melchildType, "src/main/groovy/MelChildDriver.groovy")
+            hub.addTypeToImplementationMap(melchildType,
+                    "src/main/groovy/MelChildDriver.groovy",
+                    ["DeviceID", "DeviceName", "BuildingID"])
 
             auth_driver = hub.addChildDevice("",melType,"0",getMelDriverConfig())
             auth_driver.refresh()
@@ -70,6 +72,46 @@ class TestMelDriver extends GroovyTestCase {
         driver.retrieveAndUpdateDevices()
         def devices = driver.getChildDevices()
         assert devices.size()>0
+    }
+
+    def melDevice = null
+    Object getMyMelDevice() {
+        if (melDevice==null) {
+            melDevice = get_authDriver()
+            melDevice.retrieveAndUpdateDevices()
+            def devices = melDevice.getChildDevices()
+        }
+        return melDevice
+    }
+
+    void testTemperatureUpdate(){
+        def meldevice = getMyMelDevice()
+        meldevice.childDevices[0].retrieveAndUpdate()
+        assert meldevice.childDevices[0].temperature > 0
+    }
+
+    void testOff(){
+        def meldevice = getMyMelDevice()
+        meldevice.childDevices[0].off()
+        assert meldevice.childDevices[0].temperature > 0
+    }
+
+    void testCool(){
+        def meldevice = getMyMelDevice()
+        meldevice.childDevices[0].cool()
+        assert meldevice.childDevices[0].temperature > 0
+    }
+
+    void testHeat(){
+        def meldevice = getMyMelDevice()
+        meldevice.childDevices[0].heat()
+        assert meldevice.childDevices[0].temperature > 0
+    }
+
+    void testAuto(){
+        def meldevice = getMyMelDevice()
+        meldevice.childDevices[0].auto()
+        assert meldevice.childDevices[0].temperature > 0
     }
 
     void testJsonOutput() {

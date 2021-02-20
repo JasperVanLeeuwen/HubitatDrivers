@@ -11,10 +11,10 @@ class HubitatHubEmulator {
     /*
     Emulation functionality
      */
-    def typeToImplementationMap = [:] //[typeName : implementationPath]
+    def typeToImplementationMap = [:] //[typeName : [implementationPath, [attributes in device]]]
 
-    def addTypeToImplementationMap(String typeName, String implementationPath) {
-        typeToImplementationMap[typeName] = implementationPath
+    def addTypeToImplementationMap(String typeName, String implementationPath, List attributes=[]) {
+        typeToImplementationMap[typeName] = [implementationPath, attributes]
     }
 
 
@@ -30,12 +30,17 @@ class HubitatHubEmulator {
         }
         def binding = new Binding()
         properties.each {binding.setVariable(it.getKey(), it.getValue())}
+        def attributes = typeToImplementationMap[typeName][1]
+        attributes.each { it -> binding.setVariable(it, null)}
         binding.setVariable("hub", this)
+        binding.setVariable("deviceNetworkId", deviceNetworkId)
+        binding.setVariable("temperature", null) // for TemperatureMeasurement capability
+        binding.setVariable("thermostatMode", null)
 
         def config = new CompilerConfiguration()
         config.scriptBaseClass = 'HubitatDeviceEmulator'
         def shell = new GroovyShell(this.class.classLoader, binding, config)
-        def driver = shell.parse(new File(typeToImplementationMap[typeName]))
+        def driver = shell.parse(new File(typeToImplementationMap[typeName][0]))
         devices[deviceNetworkId] = driver
         return driver
     }
@@ -48,19 +53,22 @@ abstract class HubitatDeviceEmulator extends Script {
     /*
     Emulation functionality
      */
-
+    //def hub // Hub, defined in binding
 
     /*
     Hubitat functionality
     */
-    def parent = null //parent device
+    /*
+    variables from binding:
+    def parent // parent device
+    def deviceNetworkId
+    */
     def childDevices = [:] //child devices [deviceNetworkId: device_object]
     //deviceCreators [typeName:closure(String typeName, String deviceNetworkId, Map properties = [:])]
     // closure is used to create devices
     def deviceCreators = [:]
     def metadata =  null
     def state = [:]
-    String Label = ""
     def log = LogManager.getLogger()
 
 
@@ -76,6 +84,10 @@ abstract class HubitatDeviceEmulator extends Script {
             def test = resp.data
             closure(['data':data])};
         new RESTClient().get(prms, doCall)
+    }
+
+    def sendEvent(String name, value) {
+        setProperty(name, value)
     }
 
     /*
@@ -130,7 +142,7 @@ abstract class HubitatDeviceEmulator extends Script {
     def addChildDevice(String namespace, String typeName, String deviceNetworkId, Map properties = [:]){
         Map newProperties = properties.clone()
         newProperties.put("parent", this)
-        def device = hub.addChildDevice(namespace, typeName, deviceNetworkId, properties)
+        def device = hub.addChildDevice(namespace, typeName, deviceNetworkId, newProperties)
         childDevices[deviceNetworkId] = device
         return device
     }
