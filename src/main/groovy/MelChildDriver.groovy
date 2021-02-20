@@ -200,9 +200,10 @@ def getHeatingSetpoint(temperature) {
 def setPreset(presetNr) {
     def presets = parent.getPresets(DeviceID)
     Map thePreset = presets.find {preset -> preset.Number == presetNr}
-
-    def data = retrieveDeviceState()
-    thePreset.each {data[it.key] = it.value}
-    data = sendCommand(data)
-    update(data)
+    if (thePreset) {
+        def data = retrieveDeviceState()
+        thePreset.each { data[it.key] = it.value }
+        data = sendCommand(data)
+        update(data)
+    }
 }
