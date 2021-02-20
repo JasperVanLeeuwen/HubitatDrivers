@@ -72,6 +72,7 @@ def obtainAuthToken() throws Exception {
 def retrieveAndUpdateDevices() {
     def buildings = getListDevices()
     updateChildDevices(buildings)
+    updatePresetButtons(buildings)
 }
 
 def getListDevices() {
@@ -154,4 +155,20 @@ def getPresets(DeviceID) {
     List devices = extractDevices(buildings)
     def device = devices.find {device -> "${device.DeviceID}"==DeviceID}
     return device['Presets']
+}
+
+def updatePresetButtons(buildings) {
+    log.trace "iterate over buildings"
+    extractDevices(buildings).each { device ->
+        def presets = getPresets(device.DeviceID)
+        presets.each {preset->createButton(DeviceID, preset)}
+    } }
+
+}
+
+/*
+create a button per DeviceID-preset if necessary
+ */
+def createButton(DeviceID, preset) {
+//todo: MAGIC
 }
