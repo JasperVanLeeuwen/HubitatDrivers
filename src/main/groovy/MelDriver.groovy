@@ -107,6 +107,26 @@ def getListDevices() {
 
 }
 
+def extractDevices(buildings) {
+    def devices = []
+
+    def addDevice = {device -> devices.add(device)}
+
+    buildings?.each { building ->
+        building?.Structure?.Floors?.each { floor ->
+            floor?.Areas?.each { area ->
+                area.Devices?.each addDevice
+            }
+            floor?.Devices?.each addDevice
+        }
+        building?.Structure?.Areas?.each { area ->
+            area?.Devices?.each addDevice
+        }
+        building?.Structure?.Devices?.each addDevice
+    }
+    return devices
+}
+
 def updateChildDevices(buildings) {
     def addDevice = { acUnit -> // Each Device
         if (acUnit.size() > 0) {
@@ -126,16 +146,12 @@ def updateChildDevices(buildings) {
         }
     }
     log.trace "iterate over buildings"
-    buildings?.each { building ->
-        building?.Structure?.Floors?.each { floor ->
-            floor?.Areas?.each { area ->
-                area.Devices?.each addDevice
-            }
-            floor?.Devices?.each addDevice
-        }
-        building?.Structure?.Areas?.each { area ->
-            area?.Devices?.each addDevice
-        }
-        building?.Structure?.Devices?.each addDevice
-    }
+    extractDevices(buildings).each addDevice
+}
+
+def getPresets(DeviceID) {
+    def buildings = getListDevices()
+    List devices = extractDevices(buildings)
+    def device = devices.find {device -> "${device.DeviceID}"==DeviceID}
+    return device['Presets']
 }

@@ -134,6 +134,13 @@ class TestMelDriver extends GroovyTestCase {
         assert meldevice.childDevices[0].thermostatSetpoint == 15
     }
 
+    void testGetPreset() {
+        def meldevice = getMyMelDevice()
+        def DeviceID = meldevice.childDevices[0].DeviceID
+        def presets = meldevice.getPresets(DeviceID)
+        assert presets.size()>0
+    }
+
     void testJsonOutput() {
         log.warning JsonOutput.toJson([sd: "sd"])
     }
