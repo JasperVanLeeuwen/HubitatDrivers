@@ -26,9 +26,10 @@ def initialize() {
 def refresh() {
     try {
         state.authCode = obtainAuthToken()
+        retrieveAndUpdateDevices()
     }
     catch (Exception e) {
-        log.warning("refresh: Unable to query Mitsubishi Electric MELCloud: ${e}")
+        log.error("refresh: Unable to query Mitsubishi Electric MELCloud: ${e}")
     }
 }
 
@@ -60,17 +61,22 @@ def obtainAuthToken() throws Exception {
 
     httpPost(postParams)
             { resp ->
-                log.info("obtainAuthToken: ${resp.data}")
+                log.trace("obtainAuthToken: ${resp.data}")
                 authCode = resp?.data?.LoginData?.ContextKey
-                log.info "obtainAuthToken: ContextKey - ${authCode}"
+                log.trace "obtainAuthToken: ContextKey - ${authCode}"
             }
 
     return authCode
 }
 
+def retrieveAndUpdateDevices() {
+    def buildings = getListDevices()
+    updateChildDevices(buildings)
+}
+
 def getListDevices() {
     if (state.authCode==null) {
-        log.warning("Not authenticated")
+        log.error("Not authenticated")
         return
     }
 
@@ -90,7 +96,7 @@ def getListDevices() {
     try {
 
         httpGet(getParams) { resp ->
-            log.info "data returned from ListDevices: ${resp.data}"
+            log.trace "data returned from ListDevices: ${resp.data}"
             data = resp.data
         }
     }
@@ -101,34 +107,51 @@ def getListDevices() {
 
 }
 
+def extractDevices(buildings) {
+    def devices = []
+
+    def addDevice = {device -> devices.add(device)}
+
+    buildings?.each { building ->
+        building?.Structure?.Floors?.each { floor ->
+            floor?.Areas?.each { area ->
+                area.Devices?.each addDevice
+            }
+            floor?.Devices?.each addDevice
+        }
+        building?.Structure?.Areas?.each { area ->
+            area?.Devices?.each addDevice
+        }
+        building?.Structure?.Devices?.each addDevice
+    }
+    return devices
+}
+
 def updateChildDevices(buildings) {
     def addDevice = { acUnit -> // Each Device
         if (acUnit.size() > 0) {
-            log.info "adding device ${acUnit}"
+            log.trace "adding device ${acUnit}"
             vRoom = acUnit.DeviceName
-            vUnitId = acUnit.DeviceID
-            log.info "createChildACUnit: ${vUnitId}, ${vRoom}"
+            vUnitId = "${acUnit.DeviceID}"
+            log.trace "createChildACUnit: ${vUnitId}, ${vRoom}"
 
-            def childDevice = findChildDevice(vUnitId, "AC")
-            if (childDevide == null) {
-                createChildDevice(vUnitId, vRoom, "AC")
-                childDevice = findChildDevice(vUnitId, "AC")
-                childDevice.sendEvent(name: "unitId", value: vUnitId)
+            def childDevice = getChildDevice("vUnitId")
+            if (childDevice == null) {
+                //String namespace, String typeName, String deviceNetworkId, Map properties = [:]
+                childDevice = addChildDevice("meldriver", "MelDriver Child Driver for Melcloud", vUnitId, ["label":vRoom])
+                childDevice.sendEvent("DeviceID", "${acUnit.DeviceID}")
+                childDevice.sendEvent("DeviceName", "${acUnit.DeviceName}")
+                childDevice.sendEvent("BuildingID", "${acUnit.BuildingID}")
             }
-            childDevice.refresh()
-        }
-
-        buildings?.each { building ->
-            building?.Structure?.Floors?.each { floor ->
-                floor?.Areas?.each { area ->
-                    area.Devices?.each addDevice
-                }
-                floor?.Devices?.each addDevice
-            }
-            building?.Structure?.Areas?.each { area ->
-                area?.Devices?.each addDevice
-            }
-            building?.Structure?.Devices?.each addDevice
         }
     }
+    log.trace "iterate over buildings"
+    extractDevices(buildings).each addDevice
+}
+
+def getPresets(DeviceID) {
+    def buildings = getListDevices()
+    List devices = extractDevices(buildings)
+    def device = devices.find {device -> "${device.DeviceID}"==DeviceID}
+    return device['Presets']
 }

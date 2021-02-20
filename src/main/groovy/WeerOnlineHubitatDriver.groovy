@@ -51,7 +51,7 @@ metadata
 def updated() {
     unschedule()
     initialize()
-    if (debugOutput) runIn(1800, logsOff) //disable debug logs after 30 min
+    if (logEnable) runIn(1800, logsOff) //disable debug logs after 30 min
     log.trace "Msg: updated ran"
 }
 
