@@ -93,25 +93,31 @@ class TestMelDriver extends GroovyTestCase {
     void testOff(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].off()
-        assert meldevice.childDevices[0].temperature > 0
+        assert meldevice.childDevices[0].thermostatMode == "off"
     }
 
     void testCool(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].cool()
-        assert meldevice.childDevices[0].temperature > 0
+        assert meldevice.childDevices[0].thermostatMode == "cool"
     }
 
     void testHeat(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].heat()
-        assert meldevice.childDevices[0].temperature > 0
+        assert meldevice.childDevices[0].thermostatMode == "heat"
     }
 
     void testAuto(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].auto()
-        assert meldevice.childDevices[0].temperature > 0
+        assert meldevice.childDevices[0].thermostatMode == "auto"
+    }
+
+    def testSetThermostatMode() {
+        def meldevice = getMyMelDevice()
+        meldevice.childDevices[0].setThermostatMode("heat")
+        assert meldevice.childDevices[0].thermostatMode == "heat"
     }
 
     void testJsonOutput() {

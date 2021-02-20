@@ -48,6 +48,20 @@ def retrieveDeviceState() {
 
 def update(data) {
     temperature = data['RoomTemperature']
+    def operationMode = data['OperationMode']
+    def power = data['Power']
+    //thermostatMode: ENUM ["heat", "cool", "emergency heat", "auto", "off"]
+    def thermostatModeMapper = [
+            8: "auto",
+            1: "heat",
+            3: "cool",
+    ]
+    def thermostatModeTmp = thermostatModeMapper.getOrDefault(operationMode, null)
+    if (!power) {
+        thermostatModeTmp = "off"
+    }
+    thermostatMode = thermostatModeTmp
+
 }
 
 def retrieveAndUpdate() {
@@ -100,6 +114,7 @@ def off() {
     data['EffectiveFlags'] = 1
     data['Power'] = false
     data = sendCommand(data)
+    update(data)
 }
 
 def auto() {
@@ -138,4 +153,12 @@ def heat() {
 }
 def setThermostatMode(thermostatmode) {
 
+    def mapThermostatmode = [
+            "heat": {heat()},
+            "cool": {cool()},
+            "emergency heat": {emergencyHeat()},
+            "auto": {auto()},
+            "off": {off()}
+    ]
+    mapThermostatmode[thermostatmode]()
 }
