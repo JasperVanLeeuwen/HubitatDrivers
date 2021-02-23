@@ -87,7 +87,7 @@ class TestMelDriver extends GroovyTestCase {
     void testTemperatureUpdate(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].retrieveAndUpdate()
-        assert meldevice.childDevices[0].temperature > 0
+        assert meldevice.childDevices[0].currentState['temperature'] > 0
     }
 
     void testOff(){

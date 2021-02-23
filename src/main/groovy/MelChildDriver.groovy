@@ -6,8 +6,8 @@ metadata {
         capability "TemperatureMeasurement"
         //capability "Thermostat"
         capability "thermostatMode"
-        capability "ThermostatHeatingSetpoint"
-        capability "ThermostatCoolingSetpoint"
+//        capability "ThermostatHeatingSetpoint"
+//        capability "ThermostatCoolingSetpoint"
     }
 }
 
@@ -30,7 +30,7 @@ def retrieveDeviceState() {
             "X-MitsContextKey": parent.state.authCode
     ]
     def getParams = [
-            uri        : "${parent.BaseURL}/Mitsubishi.Wifi.Client/Device/Get?id=${DeviceID}&buildingID=${BuildingID}",
+            uri        : "${parent.BaseURL}/Mitsubishi.Wifi.Client/Device/Get?id=${currentValue('DeviceID')}&buildingID=${currentValue('BuildingID')}",
             headers    : headers,
             contentType: "application/json; charset=UTF-8",
     ]
@@ -49,7 +49,7 @@ def retrieveDeviceState() {
 }
 
 def update(data) {
-    temperature = data['RoomTemperature']
+    def temperature = data['RoomTemperature']
     def operationMode = data['OperationMode']
     def power = data['Power']
     //thermostatMode: ENUM ["heat", "cool", "emergency heat", "auto", "off"]
@@ -62,9 +62,8 @@ def update(data) {
     if (!power) {
         thermostatModeTmp = "off"
     }
-    thermostatMode = thermostatModeTmp
-
-
+    sendEvent("temperature", temperature)
+    sendEvent("thermostatMode", thermostatModeTmp)
 }
 
 def retrieveAndUpdate() {
@@ -139,13 +138,9 @@ def cool() {
 }
 
 def emergencyHeat(){
-    def data = retrieveDeviceState()
-    data['EffectiveFlags'] = 287
-    data['Power'] = true
-    data['OperationMode'] = 1
-    data = sendCommand(data)
-    update(data)
+    log.error "emergencyHeat not supported by MelCloud"
 }
+
 def heat() {
     def data = retrieveDeviceState()
     data['EffectiveFlags'] = 287
@@ -171,8 +166,6 @@ temperature required (NUMBER) - Cooling setpoint in degrees
 setHeatingSetpoint(temperature)
 */
 def setCoolingSetpoint(temperature) {
-    thermostatSetpoint = temperature
-
     def data = retrieveDeviceState()
     data['SetTemperature'] = thermostatSetpoint
     data = sendCommand(data)
@@ -180,8 +173,6 @@ def setCoolingSetpoint(temperature) {
 }
 
 def setHeatingSetpoint(temperature) {
-    thermostatSetpoint = temperature
-
     def data = retrieveDeviceState()
     data['SetTemperature'] = thermostatSetpoint
     data = sendCommand(data)
@@ -198,7 +189,7 @@ def getHeatingSetpoint(temperature) {
 
 
 def setPreset(presetNr) {
-    def presets = parent.getPresets(DeviceID)
+    def presets = parent.getPresets(currentValue('DeviceID'))
     Map thePreset = presets.find {preset -> preset.Number == presetNr}
     if (thePreset) {
         def data = retrieveDeviceState()

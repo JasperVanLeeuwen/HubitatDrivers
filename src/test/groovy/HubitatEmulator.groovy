@@ -34,9 +34,17 @@ class HubitatHubEmulator {
         attributes.each { it -> binding.setVariable(it, null)}
         binding.setVariable("hub", this)
         binding.setVariable("deviceNetworkId", deviceNetworkId)
-        binding.setVariable("temperature", null) // for TemperatureMeasurement capability
-        binding.setVariable("thermostatMode", null)
-        binding.setVariable("thermostatSetpoint ", null)
+        binding.setVariable("state", [:])
+        def currentState = [
+                "temperature": null,
+                "thermostatMode": null,
+                "thermostatSetpoint": null
+        ]
+        binding.setVariable("currentState", currentState)
+
+//        binding.setVariable("temperature", null) // for TemperatureMeasurement capability
+//        binding.setVariable("thermostatMode", null)
+//        binding.setVariable("thermostatSetpoint ", null)
 
         def config = new CompilerConfiguration()
         config.scriptBaseClass = 'HubitatDeviceEmulator'
@@ -88,7 +96,11 @@ abstract class HubitatDeviceEmulator extends Script {
     }
 
     def sendEvent(String name, value) {
-        setProperty(name, value)
+        currentState[name] = value
+    }
+
+    def currentValue(String name) {
+        return currentState[name]
     }
 
     /*

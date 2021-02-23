@@ -161,8 +161,8 @@ def updatePresetButtons(buildings) {
     log.trace "iterate over buildings"
     extractDevices(buildings).each { device ->
         def presets = getPresets(device.DeviceID)
-        presets.each {preset->createButton(DeviceID, preset)}
-    } }
+        presets.each {preset->createButton(device.DeviceID, preset)}
+    }
 
 }
 
