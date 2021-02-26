@@ -198,6 +198,7 @@ def setPreset(presetNr) {
                 data[it.key] = it.value
             }
         }
+        data['EffectiveFlags'] = 287
         data = sendCommand(data)
         update(data)
     }
