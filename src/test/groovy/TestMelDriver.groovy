@@ -155,4 +155,14 @@ class TestMelDriver extends GroovyTestCase {
     void testJsonOutput() {
         log.warning JsonOutput.toJson([sd: "sd"])
     }
+
+    void testPreset() {
+        HubitatDeviceEmulator driver = get_authDriver()
+        driver.retrieveAndUpdateDevices()
+        def devices = driver.getChildDevices()
+        //todo : change this for others
+        def presetButton = devices[3]
+        presetButton.push()
+        assert devices.size()>0
+    }
 }

@@ -194,7 +194,7 @@ def setPreset(presetNr) {
     if (thePreset) {
         def data = retrieveDeviceState()
         thePreset.each {
-            if (data.contains(it.key)) {
+            if (data.containsKey(it.key)) {
                 data[it.key] = it.value
             }
         }

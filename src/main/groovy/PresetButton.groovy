@@ -18,5 +18,7 @@ def installed() {
 
 def push() {
     log.debug "pushed"
+    def melChildDevice = parent.getChildDevice(currentValue('DeviceID'))
+    melChildDevice.setPreset( currentValue('presetNr') )
     sendEvent(name:"pushed", value:1)
 }

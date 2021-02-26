@@ -186,4 +186,5 @@ def createButton(device, preset) {
         presetButton.sendEvent(name:"DeviceID", value:DeviceID)
         presetButton.sendEvent(name:"presetNr", value:presetNr)
     }
+    presetButton.sendEvent(name:"presetNr", value:presetNr)
 }
