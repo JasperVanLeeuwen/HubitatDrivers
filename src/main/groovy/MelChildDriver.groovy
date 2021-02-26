@@ -193,7 +193,11 @@ def setPreset(presetNr) {
     Map thePreset = presets.find {preset -> preset.Number == presetNr}
     if (thePreset) {
         def data = retrieveDeviceState()
-        thePreset.each { data[it.key] = it.value }
+        thePreset.each {
+            if (data.contains(it.key)) {
+                data[it.key] = it.value
+            }
+        }
         data = sendCommand(data)
         update(data)
     }

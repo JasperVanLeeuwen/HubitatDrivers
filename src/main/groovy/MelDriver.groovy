@@ -138,7 +138,6 @@ def updateChildDevices(buildings) {
 
             def childDevice = getChildDevice("vUnitId")
             if (childDevice == null) {
-                //String namespace, String typeName, String deviceNetworkId, Map properties = [:]
                 childDevice = addChildDevice("meldriver", "MelDriver Child Driver for Melcloud", vUnitId, ["label":vRoom])
                 childDevice.sendEvent("DeviceID", "${acUnit.DeviceID}")
                 childDevice.sendEvent("DeviceName", "${acUnit.DeviceName}")
