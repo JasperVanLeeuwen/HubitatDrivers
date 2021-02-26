@@ -135,13 +135,13 @@ def updateChildDevices(buildings) {
             vRoom = acUnit.DeviceName
             vUnitId = "${acUnit.DeviceID}"
             log.trace "createChildACUnit: ${vUnitId}, ${vRoom}"
-
-            def childDevice = getChildDevice("vUnitId")
+            //create child driver for airco
+            def childDevice = getChildDevice(vUnitId)
             if (childDevice == null) {
                 childDevice = addChildDevice("meldriver", "MelDriver Child Driver for Melcloud", vUnitId, ["label":vRoom])
-                childDevice.sendEvent("DeviceID", "${acUnit.DeviceID}")
-                childDevice.sendEvent("DeviceName", "${acUnit.DeviceName}")
-                childDevice.sendEvent("BuildingID", "${acUnit.BuildingID}")
+                childDevice.sendEvent(name:"DeviceID", value:"${acUnit.DeviceID}")
+                childDevice.sendEvent(name:"DeviceName", value:"${acUnit.DeviceName}")
+                childDevice.sendEvent(name:"BuildingID", value:"${acUnit.BuildingID}")
             }
         }
     }
@@ -152,15 +152,22 @@ def updateChildDevices(buildings) {
 def getPresets(DeviceID) {
     def buildings = getListDevices()
     List devices = extractDevices(buildings)
-    def device = devices.find {device -> "${device.DeviceID}"==DeviceID}
+    def device = devices.find {device ->
+        log.trace "${device}"
+        log.trace "${device?.DeviceID}  $DeviceID"
+        return  "${device.DeviceID}".equals("$DeviceID")
+    }
+    log.trace "${devices.size()} ${device}"
     return device['Presets']
 }
 
 def updatePresetButtons(buildings) {
     log.trace "iterate over buildings"
     extractDevices(buildings).each { device ->
+        log.debug "presets for ${device.DeviceID}"
         def presets = getPresets(device.DeviceID)
-        presets.each {preset->createButton(device.DeviceID, preset)}
+        log.debug "presets for ${device.DeviceID}: ${presets}"
+        presets.each {preset->createButton(device, preset)}
     }
 
 }
@@ -168,6 +175,15 @@ def updatePresetButtons(buildings) {
 /*
 create a button per DeviceID-preset if necessary
  */
-def createButton(DeviceID, preset) {
-//todo: MAGIC
+def createButton(device, preset) {
+    def DeviceID = "${device.DeviceID}"
+    def presetNr = preset['Number']
+    def presetButtonId = "${DeviceID}-${presetNr}"
+
+    def presetButton = getChildDevice(presetButtonId)
+    if (presetButton==null) {
+        presetButton = addChildDevice("meldriver", "PresetButton for Melcloud", presetButtonId, ["label":" ${device.DeviceName}- ${preset['NumberDescription']}" ])
+        presetButton.sendEvent(name:"DeviceID", value:DeviceID)
+        presetButton.sendEvent(name:"presetNr", value:presetNr)
+    }
 }

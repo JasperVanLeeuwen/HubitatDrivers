@@ -95,7 +95,9 @@ abstract class HubitatDeviceEmulator extends Script {
         new RESTClient().get(prms, doCall)
     }
 
-    def sendEvent(String name, value) {
+    def sendEvent(Map properties) {
+        String name = properties["name"]
+        def value = properties["value"]
         currentState[name] = value
     }
 

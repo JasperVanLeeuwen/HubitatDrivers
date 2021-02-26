@@ -62,8 +62,8 @@ def update(data) {
     if (!power) {
         thermostatModeTmp = "off"
     }
-    sendEvent("temperature", temperature)
-    sendEvent("thermostatMode", thermostatModeTmp)
+    sendEvent(name:"temperature", value:temperature)
+    sendEvent(name:"thermostatMode", value:thermostatModeTmp)
 }
 
 def retrieveAndUpdate() {

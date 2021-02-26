@@ -53,6 +53,11 @@ class TestMelDriver extends GroovyTestCase {
                     "src/main/groovy/MelChildDriver.groovy",
                     ["DeviceID", "DeviceName", "BuildingID"])
 
+            def presetType= "PresetButton for Melcloud"
+            hub.addTypeToImplementationMap(presetType,
+                    "src/main/groovy/PresetButton.groovy",
+                    ["DeviceID"])
+
             auth_driver = hub.addChildDevice("",melType,"0",getMelDriverConfig())
             auth_driver.refresh()
 
