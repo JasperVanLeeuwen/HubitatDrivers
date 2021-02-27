@@ -61,9 +61,7 @@ def obtainAuthToken() throws Exception {
 
     httpPost(postParams)
             { resp ->
-                log.trace("obtainAuthToken: ${resp.data}")
                 authCode = resp?.data?.LoginData?.ContextKey
-                log.trace "obtainAuthToken: ContextKey - ${authCode}"
             }
 
     return authCode
@@ -73,6 +71,14 @@ def retrieveAndUpdateDevices() {
     def buildings = getListDevices()
     updateChildDevices(buildings)
     updatePresetButtons(buildings)
+}
+
+def getTheAuthcode() {
+    return state.authCode
+}
+
+def getTheBaseURL() {
+    return BaseURL
 }
 
 def getListDevices() {
@@ -87,7 +93,7 @@ def getListDevices() {
             "Accept": "application/json",
             "Referer": BaseURL,
             "X-MitsContextKey": state.authCode
-            ]
+    ]
 
     def getParams = [
             uri        : "${BaseURL}/Mitsubishi.Wifi.Client/User/ListDevices",
@@ -97,12 +103,11 @@ def getListDevices() {
     try {
 
         httpGet(getParams) { resp ->
-            log.trace "data returned from ListDevices: ${resp.data}"
             data = resp.data
         }
     }
     catch (Exception e) {
-        log.error "createChildACUnits : Unable to query Mitsubishi Electric MELCloud: ${e}"
+        log.error "getListDevices : Unable to query Mitsubishi Electric MELCloud: ${e}"
     }
     return data
 
@@ -131,10 +136,9 @@ def extractDevices(buildings) {
 def updateChildDevices(buildings) {
     def addDevice = { acUnit -> // Each Device
         if (acUnit.size() > 0) {
-            log.trace "adding device ${acUnit}"
+            log.info "adding device ${acUnit}"
             vRoom = acUnit.DeviceName
             vUnitId = "${acUnit.DeviceID}"
-            log.trace "createChildACUnit: ${vUnitId}, ${vRoom}"
             //create child driver for airco
             def childDevice = getChildDevice(vUnitId)
             if (childDevice == null) {
@@ -145,7 +149,6 @@ def updateChildDevices(buildings) {
             }
         }
     }
-    log.trace "iterate over buildings"
     extractDevices(buildings).each addDevice
 }
 
@@ -153,20 +156,14 @@ def getPresets(DeviceID) {
     def buildings = getListDevices()
     List devices = extractDevices(buildings)
     def device = devices.find {device ->
-        log.trace "${device}"
-        log.trace "${device?.DeviceID}  $DeviceID"
         return  "${device.DeviceID}".equals("$DeviceID")
     }
-    log.trace "${devices.size()} ${device}"
     return device['Presets']
 }
 
 def updatePresetButtons(buildings) {
-    log.trace "iterate over buildings"
     extractDevices(buildings).each { device ->
-        log.debug "presets for ${device.DeviceID}"
         def presets = getPresets(device.DeviceID)
-        log.debug "presets for ${device.DeviceID}: ${presets}"
         presets.each {preset->createButton(device, preset)}
     }
 

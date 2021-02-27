@@ -5,9 +5,12 @@ metadata {
         capability "Refresh"
         capability "TemperatureMeasurement"
         //capability "Thermostat"
-        capability "thermostatMode"
+        capability "ThermostatMode"
 //        capability "ThermostatHeatingSetpoint"
 //        capability "ThermostatCoolingSetpoint"
+        attribute "DeviceID", "string"
+        attribute "BuildingID", "string"
+
     }
 }
 
@@ -16,34 +19,33 @@ def refresh() {
 }
 
 def retrieveDeviceState() {
-
-    if (parent.state.authCode==null) {
+    def authCode = parent.getTheAuthcode()
+    def baseUrl = parent.getTheBaseURL()
+    if (authCode==null) {
         log.error("Not authenticated")
         return
     }
-
     def data = null
     def headers = [
             "Content-Type": "application/json; charset=UTF-8",
             "Accept": "application/json",
-            "Referer": parent.BaseURL,
-            "X-MitsContextKey": parent.state.authCode
+            "Referer": baseUrl,
+            "X-MitsContextKey": authCode
     ]
     def getParams = [
-            uri        : "${parent.BaseURL}/Mitsubishi.Wifi.Client/Device/Get?id=${currentValue('DeviceID')}&buildingID=${currentValue('BuildingID')}",
+            uri        : "${baseUrl}/Mitsubishi.Wifi.Client/Device/Get?id=${device.currentValue('DeviceID')}&buildingID=${device.currentValue('BuildingID')}",
             headers    : headers,
             contentType: "application/json; charset=UTF-8",
     ]
     try {
 
         httpGet(getParams) { resp ->
-            log.trace "data returned from ListDevices: ${resp.data}"
             data = resp.data
 
         }
     }
     catch (Exception e) {
-        log.error "createChildACUnits : Unable to query Mitsubishi Electric MELCloud: ${e}"
+        log.error "retrieveDeviceState : Unable to query Mitsubishi Electric MELCloud: ${e}"
     }
     return data
 }
@@ -64,6 +66,8 @@ def update(data) {
     }
     sendEvent(name:"temperature", value:temperature)
     sendEvent(name:"thermostatMode", value:thermostatModeTmp)
+    sendEvent(name:"thermostatSetpoint", value:data['SetTemperature'])
+
 }
 
 def retrieveAndUpdate() {
@@ -76,13 +80,13 @@ def sendCommand(data) {
     def headers = [
             "Content-Type": "application/json; charset=UTF-8",
             Accept: "application/json",
-            Referer: parent.BaseURL,
-            Origin: parent.BaseURL,
-            "X-MitsContextKey": parent.state.authCode,
+            Referer: parent.getTheBaseURL(),
+            Origin: parent.getTheBaseURL(),
+            "X-MitsContextKey": parent.getTheAuthcode() ,
             "Sec-Fetch-Mode": "cors"
     ]
     def postParams = [
-            uri        : "${parent.BaseURL}/Mitsubishi.Wifi.Client/Device/SetAta",
+            uri        : "${parent.getTheBaseURL()}/Mitsubishi.Wifi.Client/Device/SetAta",
             headers    : headers,
             contentType: "application/json; charset=UTF-8",
             body       : JsonOutput.toJson(data)
@@ -91,7 +95,6 @@ def sendCommand(data) {
     httpPost(postParams)
             { resp ->
                 result = resp.data
-                log.trace("off: ${data}")
             }
     return result
 }
@@ -167,14 +170,14 @@ setHeatingSetpoint(temperature)
 */
 def setCoolingSetpoint(temperature) {
     def data = retrieveDeviceState()
-    data['SetTemperature'] = thermostatSetpoint
+    data['SetTemperature'] = temperature
     data = sendCommand(data)
     update(data)
 }
 
 def setHeatingSetpoint(temperature) {
     def data = retrieveDeviceState()
-    data['SetTemperature'] = thermostatSetpoint
+    data['SetTemperature'] = temperature
     data = sendCommand(data)
     update(data)
 }
@@ -189,10 +192,13 @@ def getHeatingSetpoint(temperature) {
 
 
 def setPreset(presetNr) {
-    def presets = parent.getPresets(currentValue('DeviceID'))
+    def deviceId = device.currentValue('DeviceID')
+    def presets = parent.getPresets( deviceId )
     Map thePreset = presets.find {preset -> preset.Number == presetNr}
+
     if (thePreset) {
         def data = retrieveDeviceState()
+
         thePreset.each {
             if (data.containsKey(it.key)) {
                 data[it.key] = it.value

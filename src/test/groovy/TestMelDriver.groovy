@@ -92,56 +92,56 @@ class TestMelDriver extends GroovyTestCase {
     void testTemperatureUpdate(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].retrieveAndUpdate()
-        assert meldevice.childDevices[0].currentState['temperature'] > 0
+        assert meldevice.childDevices[0].device.currentState['temperature'] > 0
     }
 
     void testOff(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].off()
-        assert meldevice.childDevices[0].thermostatMode == "off"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "off"
     }
 
     void testCool(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].cool()
-        assert meldevice.childDevices[0].thermostatMode == "cool"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "cool"
     }
 
     void testHeat(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].heat()
-        assert meldevice.childDevices[0].thermostatMode == "heat"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "heat"
     }
 
     void testAuto(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].auto()
-        assert meldevice.childDevices[0].thermostatMode == "auto"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "auto"
     }
 
     void testSetThermostatMode() {
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].setThermostatMode("heat")
-        assert meldevice.childDevices[0].thermostatMode == "heat"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "heat"
     }
 
     void testSetHeatingSetpoint() {
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].setThermostatMode("heat")
         meldevice.childDevices[0].setHeatingSetpoint(25)
-        assert meldevice.childDevices[0].thermostatSetpoint == 25
+        assert meldevice.childDevices[0].device.currentState.thermostatSetpoint == 25
     }
 
     void testSetCoolingSetpoint() {
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].setThermostatMode("heat")
         meldevice.childDevices[0].setCoolingSetpoint(15)
-        assert meldevice.childDevices[0].thermostatSetpoint == 15
+        assert meldevice.childDevices[0].device.currentState.thermostatSetpoint == 15
     }
 
     void testGetPreset() {
         def meldevice = getMyMelDevice()
-        def DeviceID = meldevice.childDevices[0].DeviceID
+        def DeviceID = meldevice.childDevices[0].device.currentState.DeviceID
         def presets = meldevice.getPresets(DeviceID)
         assert presets.size()>0
     }

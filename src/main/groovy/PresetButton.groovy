@@ -5,7 +5,7 @@ metadata {
         capability "Momentary"
 
         attribute "DeviceID", "string" //MelChildDriver.DeviceID to push
-        attribute "presetNr", "string" // preset number
+        attribute "presetNr", "number" // preset number
 
     }
 
@@ -17,8 +17,9 @@ def installed() {
 }
 
 def push() {
-    log.debug "pushed"
-    def melChildDevice = parent.getChildDevice(currentValue('DeviceID'))
-    melChildDevice.setPreset( currentValue('presetNr') )
-    sendEvent(name:"pushed", value:1)
+    def deviceId = device.currentValue('DeviceID')
+    def presetNr = device.currentValue('presetNr')
+    log.info " melcloud preset fort device ${deviceId} - preset $presetNr"
+    def melChildDevice = parent.getChildDevice(deviceId)
+    melChildDevice.setPreset( presetNr )
 }

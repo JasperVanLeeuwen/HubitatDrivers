@@ -3,6 +3,7 @@ import org.apache.commons.lang.NotImplementedException
 import org.apache.logging.log4j.LogManager
 import org.codehaus.groovy.control.CompilerConfiguration
 
+
 /*
 represents Hubitat hub
  */
@@ -35,16 +36,12 @@ class HubitatHubEmulator {
         binding.setVariable("hub", this)
         binding.setVariable("deviceNetworkId", deviceNetworkId)
         binding.setVariable("state", [:])
-        def currentState = [
-                "temperature": null,
-                "thermostatMode": null,
-                "thermostatSetpoint": null
-        ]
-        binding.setVariable("currentState", currentState)
+        DeviceState device = new DeviceState()
+        device.setCurrentValue("temperature",null)
+        device.setCurrentValue("thermostatMode",null)
+        device.setCurrentValue("thermostatSetpoint",null)
+        binding.setVariable("device", device)
 
-//        binding.setVariable("temperature", null) // for TemperatureMeasurement capability
-//        binding.setVariable("thermostatMode", null)
-//        binding.setVariable("thermostatSetpoint ", null)
 
         def config = new CompilerConfiguration()
         config.scriptBaseClass = 'HubitatDeviceEmulator'
@@ -52,6 +49,22 @@ class HubitatHubEmulator {
         def driver = shell.parse(new File(typeToImplementationMap[typeName][0]))
         devices[deviceNetworkId] = driver
         return driver
+    }
+}
+
+/*
+Manages the current state of a device
+ */
+class DeviceState {
+
+    def currentState = [:]
+
+    def currentValue(name) {
+        return currentState[name]
+    }
+
+    def setCurrentValue(name, value) {
+        currentState[name] = value
     }
 }
 
@@ -98,12 +111,9 @@ abstract class HubitatDeviceEmulator extends Script {
     def sendEvent(Map properties) {
         String name = properties["name"]
         def value = properties["value"]
-        currentState[name] = value
+        device.setCurrentValue(name, value)
     }
 
-    def currentValue(String name) {
-        return currentState[name]
-    }
 
     /*
     //https://docs.hubitat.com/index.php?title=Driver_Object#getChildDevice
