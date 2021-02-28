@@ -89,22 +89,19 @@ abstract class HubitatDeviceEmulator extends Script {
     //deviceCreators [typeName:closure(String typeName, String deviceNetworkId, Map properties = [:])]
     // closure is used to create devices
     def deviceCreators = [:]
-    def metadata =  null
     def state = [:]
     def log = LogManager.getLogger()
 
 
-    def httpPost( prms, closure) {
+    static def  httpPost( prms, closure) {
         def doCall = {resp, data->
-            def test = resp.data
             closure(['data':data])}
         new RESTClient().post(prms, doCall)
     }
 
-    def httpGet(prms, closure) {
+    static def httpGet(prms, closure) {
         def doCall = {resp, data->
-            def test = resp.data
-            closure(['data':data])};
+            closure(['data':data])}
         new RESTClient().get(prms, doCall)
     }
 
