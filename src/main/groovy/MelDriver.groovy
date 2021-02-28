@@ -16,12 +16,6 @@ metadata {
 
 }
 
-def initialize() {
-    if (![UserName, BaseURL, Password].({String val-> val.isEmpty()})) {
-        refresh()
-    }
-}
-
 def refresh() {
     try {
         state.authCode = obtainAuthToken()

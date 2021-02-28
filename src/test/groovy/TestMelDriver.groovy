@@ -1,5 +1,6 @@
 import org.codehaus.groovy.control.CompilerConfiguration
 import groovy.json.JsonOutput
+import static org.mockito.Mockito.*
 
 class TestMelDriver extends GroovyTestCase {
 
@@ -175,4 +176,5 @@ class TestMelDriver extends GroovyTestCase {
         presetButton.push()
         assert devices.size()>0
     }
+
 }

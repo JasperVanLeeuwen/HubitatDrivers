@@ -111,6 +111,33 @@ abstract class HubitatDeviceEmulator extends Script {
         device.setCurrentValue(name, value)
     }
 
+    /*
+    runIn
+Signature
+void runIn(Long delayInSeconds, String handlerMethod, Map options = null)
+Parameters
+delayInSeconds - How long to wait in seconds until the handler should be called, don't expect that it will be called in exactly that time.
+handlerMethod - The name of a handler method in your driver or app. The method name should not contain parentheses.
+options - Optional values to control the scheduling of this method
+    overwrite - defaults to true which cancels the previous scheduled running of the handler method and schedules new, if set to false this will create a duplicate schedule.
+    data - optional data to be passed to the handler method.
+misfire - If set to "ignore" then the scheduler will simply try to fire it as soon as it can. NOTE: if a scheduler uses this instruction, and it has missed several of its scheduled firings, then several rapid firings may occur as the scheduler attempts to catch back up to where it would have been.
+Example
+    runIn(50, 'myMethod', [data: ["myKey":"myValue"]])
+     */
+    static void runIn(Long delayInSeconds, String handlerMethod, Map options = null) {
+        //we actually do not wait. perhaps make this configurable
+        "$handlerMethod"()
+    }
+
+    static void unschedule() {
+
+    }
+
+    void runEvery1Minute(String handlerMethod, Map options = null) {
+        //we actually do not wait. perhaps make this configurable
+        "$handlerMethod"()
+    }
 
     /*
     //https://docs.hubitat.com/index.php?title=Driver_Object#getChildDevice

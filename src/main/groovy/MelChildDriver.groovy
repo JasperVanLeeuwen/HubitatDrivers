@@ -17,8 +17,14 @@ metadata {
     }
 }
 
+void installed() {
+    runIn(30,"refresh")
+}
+
 def refresh() {
+    unschedule()
     retrieveAndUpdate()
+    runEvery1Minute("retrieveAndUpdate")
 }
 
 def retrieveDeviceState() {
