@@ -12,7 +12,6 @@ metadata {
         input(name: "BaseURL", type: "string", title: "MELCloud Base URL", description: "Enter the base URL for the Mitsubishi Electric MELCloud Service", defaultValue: "https://app.melcloud.com", required: true, displayDuringSetup: true)
         input(name: "UserName", type: "string", title: "MELCloud Username / Email", description: "Username / Email used to authenticate on Mitsubishi Electric MELCloud", displayDuringSetup: true)
         input(name: "Password", type: "password", title: "MELCloud Account Password", description: "Password for authenticating on Mitsubishi Electric MELCloud", displayDuringSetup: true)
-        input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
     }
 
 }
@@ -61,9 +60,7 @@ def obtainAuthToken() throws Exception {
 
     httpPost(postParams)
             { resp ->
-                log.trace("obtainAuthToken: ${resp.data}")
                 authCode = resp?.data?.LoginData?.ContextKey
-                log.trace "obtainAuthToken: ContextKey - ${authCode}"
             }
 
     return authCode
@@ -72,6 +69,15 @@ def obtainAuthToken() throws Exception {
 def retrieveAndUpdateDevices() {
     def buildings = getListDevices()
     updateChildDevices(buildings)
+    updatePresetButtons(buildings)
+}
+
+def getTheAuthcode() {
+    return state.authCode
+}
+
+def getTheBaseURL() {
+    return BaseURL
 }
 
 def getListDevices() {
@@ -86,7 +92,7 @@ def getListDevices() {
             "Accept": "application/json",
             "Referer": BaseURL,
             "X-MitsContextKey": state.authCode
-            ]
+    ]
 
     def getParams = [
             uri        : "${BaseURL}/Mitsubishi.Wifi.Client/User/ListDevices",
@@ -96,12 +102,11 @@ def getListDevices() {
     try {
 
         httpGet(getParams) { resp ->
-            log.trace "data returned from ListDevices: ${resp.data}"
             data = resp.data
         }
     }
     catch (Exception e) {
-        log.error "createChildACUnits : Unable to query Mitsubishi Electric MELCloud: ${e}"
+        log.error "getListDevices : Unable to query Mitsubishi Electric MELCloud: ${e}"
     }
     return data
 
@@ -130,28 +135,52 @@ def extractDevices(buildings) {
 def updateChildDevices(buildings) {
     def addDevice = { acUnit -> // Each Device
         if (acUnit.size() > 0) {
-            log.trace "adding device ${acUnit}"
+            log.info "adding device ${acUnit}"
             vRoom = acUnit.DeviceName
             vUnitId = "${acUnit.DeviceID}"
-            log.trace "createChildACUnit: ${vUnitId}, ${vRoom}"
-
-            def childDevice = getChildDevice("vUnitId")
+            //create child driver for airco
+            def childDevice = getChildDevice(vUnitId)
             if (childDevice == null) {
-                //String namespace, String typeName, String deviceNetworkId, Map properties = [:]
                 childDevice = addChildDevice("meldriver", "MelDriver Child Driver for Melcloud", vUnitId, ["label":vRoom])
-                childDevice.sendEvent("DeviceID", "${acUnit.DeviceID}")
-                childDevice.sendEvent("DeviceName", "${acUnit.DeviceName}")
-                childDevice.sendEvent("BuildingID", "${acUnit.BuildingID}")
+                childDevice.sendEvent(name:"DeviceID", value:"${acUnit.DeviceID}")
+                childDevice.sendEvent(name:"DeviceName", value:"${acUnit.DeviceName}")
+                childDevice.sendEvent(name:"BuildingID", value:"${acUnit.BuildingID}")
             }
         }
     }
-    log.trace "iterate over buildings"
     extractDevices(buildings).each addDevice
 }
 
 def getPresets(DeviceID) {
     def buildings = getListDevices()
     List devices = extractDevices(buildings)
-    def device = devices.find {device -> "${device.DeviceID}"==DeviceID}
+    def device = devices.find {device ->
+        return  "${device.DeviceID}".equals("$DeviceID")
+    }
     return device['Presets']
+}
+
+def updatePresetButtons(buildings) {
+    extractDevices(buildings).each { device ->
+        def presets = getPresets(device.DeviceID)
+        presets.each {preset->createButton(device, preset)}
+    }
+
+}
+
+/*
+create a button per DeviceID-preset if necessary
+ */
+def createButton(device, preset) {
+    def DeviceID = "${device.DeviceID}"
+    def presetNr = preset['Number']
+    def presetButtonId = "${DeviceID}-${presetNr}"
+
+    def presetButton = getChildDevice(presetButtonId)
+    if (presetButton==null) {
+        presetButton = addChildDevice("meldriver", "PresetButton for Melcloud", presetButtonId, ["label":" ${device.DeviceName}- ${preset['NumberDescription']}" ])
+        presetButton.sendEvent(name:"DeviceID", value:DeviceID)
+        presetButton.sendEvent(name:"presetNr", value:presetNr)
+    }
+    presetButton.sendEvent(name:"presetNr", value:presetNr)
 }

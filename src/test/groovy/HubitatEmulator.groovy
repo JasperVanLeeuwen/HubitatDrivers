@@ -3,6 +3,7 @@ import org.apache.commons.lang.NotImplementedException
 import org.apache.logging.log4j.LogManager
 import org.codehaus.groovy.control.CompilerConfiguration
 
+
 /*
 represents Hubitat hub
  */
@@ -34,9 +35,13 @@ class HubitatHubEmulator {
         attributes.each { it -> binding.setVariable(it, null)}
         binding.setVariable("hub", this)
         binding.setVariable("deviceNetworkId", deviceNetworkId)
-        binding.setVariable("temperature", null) // for TemperatureMeasurement capability
-        binding.setVariable("thermostatMode", null)
-        binding.setVariable("thermostatSetpoint ", null)
+        binding.setVariable("state", [:])
+        DeviceState device = new DeviceState()
+        device.setCurrentValue("temperature",null)
+        device.setCurrentValue("thermostatMode",null)
+        device.setCurrentValue("thermostatSetpoint",null)
+        binding.setVariable("device", device)
+
 
         def config = new CompilerConfiguration()
         config.scriptBaseClass = 'HubitatDeviceEmulator'
@@ -44,6 +49,22 @@ class HubitatHubEmulator {
         def driver = shell.parse(new File(typeToImplementationMap[typeName][0]))
         devices[deviceNetworkId] = driver
         return driver
+    }
+}
+
+/*
+Manages the current state of a device
+ */
+class DeviceState {
+
+    def currentState = [:]
+
+    def currentValue(name) {
+        return currentState[name]
+    }
+
+    def setCurrentValue(name, value) {
+        currentState[name] = value
     }
 }
 
@@ -68,28 +89,28 @@ abstract class HubitatDeviceEmulator extends Script {
     //deviceCreators [typeName:closure(String typeName, String deviceNetworkId, Map properties = [:])]
     // closure is used to create devices
     def deviceCreators = [:]
-    def metadata =  null
     def state = [:]
     def log = LogManager.getLogger()
 
 
-    def httpPost( prms, closure) {
+    static def  httpPost( prms, closure) {
         def doCall = {resp, data->
-            def test = resp.data
             closure(['data':data])}
         new RESTClient().post(prms, doCall)
     }
 
-    def httpGet(prms, closure) {
+    static def httpGet(prms, closure) {
         def doCall = {resp, data->
-            def test = resp.data
-            closure(['data':data])};
+            closure(['data':data])}
         new RESTClient().get(prms, doCall)
     }
 
-    def sendEvent(String name, value) {
-        setProperty(name, value)
+    def sendEvent(Map properties) {
+        String name = properties["name"]
+        def value = properties["value"]
+        device.setCurrentValue(name, value)
     }
+
 
     /*
     //https://docs.hubitat.com/index.php?title=Driver_Object#getChildDevice

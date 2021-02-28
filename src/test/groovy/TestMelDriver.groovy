@@ -5,6 +5,18 @@ class TestMelDriver extends GroovyTestCase {
 
     private Object auth_driver = null
 
+    def originalState = null
+
+    void setUp() {
+        def meldevice = getMyMelDevice()
+        originalState = meldevice.childDevices[0].retrieveDeviceState()
+    }
+
+    void tearDown() {
+        def meldevice = getMyMelDevice()
+        meldevice.childDevices[0].sendCommand(originalState)
+    }
+
 
     void testProperties() {
         InputStream  prop_stream = TestMelDriver.class.getClassLoader().getResourceAsStream("mymelcloud.properties")
@@ -53,6 +65,11 @@ class TestMelDriver extends GroovyTestCase {
                     "src/main/groovy/MelChildDriver.groovy",
                     ["DeviceID", "DeviceName", "BuildingID"])
 
+            def presetType= "PresetButton for Melcloud"
+            hub.addTypeToImplementationMap(presetType,
+                    "src/main/groovy/PresetButton.groovy",
+                    ["DeviceID"])
+
             auth_driver = hub.addChildDevice("",melType,"0",getMelDriverConfig())
             auth_driver.refresh()
 
@@ -87,56 +104,54 @@ class TestMelDriver extends GroovyTestCase {
     void testTemperatureUpdate(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].retrieveAndUpdate()
-        assert meldevice.childDevices[0].temperature > 0
+        assert meldevice.childDevices[0].device.currentState['temperature'] > 0
     }
 
     void testOff(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].off()
-        assert meldevice.childDevices[0].thermostatMode == "off"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "off"
     }
 
     void testCool(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].cool()
-        assert meldevice.childDevices[0].thermostatMode == "cool"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "cool"
     }
 
     void testHeat(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].heat()
-        assert meldevice.childDevices[0].thermostatMode == "heat"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "heat"
     }
 
     void testAuto(){
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].auto()
-        assert meldevice.childDevices[0].thermostatMode == "auto"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "auto"
     }
 
     void testSetThermostatMode() {
         def meldevice = getMyMelDevice()
         meldevice.childDevices[0].setThermostatMode("heat")
-        assert meldevice.childDevices[0].thermostatMode == "heat"
+        assert meldevice.childDevices[0].device.currentState.thermostatMode == "heat"
     }
 
     void testSetHeatingSetpoint() {
         def meldevice = getMyMelDevice()
-        meldevice.childDevices[0].setThermostatMode("heat")
         meldevice.childDevices[0].setHeatingSetpoint(25)
-        assert meldevice.childDevices[0].thermostatSetpoint == 25
+        assert meldevice.childDevices[0].device.currentState.heatingSetpoint == 25
     }
 
     void testSetCoolingSetpoint() {
         def meldevice = getMyMelDevice()
-        meldevice.childDevices[0].setThermostatMode("heat")
         meldevice.childDevices[0].setCoolingSetpoint(15)
-        assert meldevice.childDevices[0].thermostatSetpoint == 15
+        assert meldevice.childDevices[0].device.currentState.coolingSetpoint == 15
     }
 
     void testGetPreset() {
         def meldevice = getMyMelDevice()
-        def DeviceID = meldevice.childDevices[0].DeviceID
+        def DeviceID = meldevice.childDevices[0].device.currentState.DeviceID
         def presets = meldevice.getPresets(DeviceID)
         assert presets.size()>0
     }
@@ -149,5 +164,15 @@ class TestMelDriver extends GroovyTestCase {
 
     void testJsonOutput() {
         log.warning JsonOutput.toJson([sd: "sd"])
+    }
+
+    void testPreset() {
+        HubitatDeviceEmulator driver = get_authDriver()
+        driver.retrieveAndUpdateDevices()
+        def devices = driver.getChildDevices()
+        //todo : change this for others
+        def presetButton = devices[3]
+        presetButton.push()
+        assert devices.size()>0
     }
 }
