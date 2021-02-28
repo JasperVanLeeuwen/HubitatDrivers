@@ -12,7 +12,6 @@ metadata {
         input(name: "BaseURL", type: "string", title: "MELCloud Base URL", description: "Enter the base URL for the Mitsubishi Electric MELCloud Service", defaultValue: "https://app.melcloud.com", required: true, displayDuringSetup: true)
         input(name: "UserName", type: "string", title: "MELCloud Username / Email", description: "Username / Email used to authenticate on Mitsubishi Electric MELCloud", displayDuringSetup: true)
         input(name: "Password", type: "password", title: "MELCloud Account Password", description: "Password for authenticating on Mitsubishi Electric MELCloud", displayDuringSetup: true)
-        input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
     }
 
 }
