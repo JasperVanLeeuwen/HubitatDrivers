@@ -18,7 +18,7 @@ metadata {
 }
 
 void installed() {
-    refresh()
+    runIn(30,"refresh")
 }
 
 def refresh() {
