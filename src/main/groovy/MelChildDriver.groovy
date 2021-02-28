@@ -10,12 +10,15 @@ metadata {
 //        capability "ThermostatCoolingSetpoint"
         attribute "DeviceID", "string"
         attribute "BuildingID", "string"
+        attribute "coolingSetpoint", "number"
+        attribute "heatingSetpoint", "number"
+        attribute "thermostatSetpoint", "number"
 
     }
 }
 
 def refresh() {
-
+    retrieveAndUpdate()
 }
 
 def retrieveDeviceState() {
@@ -67,7 +70,8 @@ def update(data) {
     sendEvent(name:"temperature", value:temperature)
     sendEvent(name:"thermostatMode", value:thermostatModeTmp)
     sendEvent(name:"thermostatSetpoint", value:data['SetTemperature'])
-
+    sendEvent(name:"coolingSetpoint", value:data['DefaultCoolingSetTemperature'])
+    sendEvent(name:"heatingSetpoint", value:data['DefaultHeatingSetTemperature'])
 }
 
 def retrieveAndUpdate() {
@@ -136,6 +140,7 @@ def cool() {
     data['EffectiveFlags'] = 287
     data['Power'] = true
     data['OperationMode'] = 3
+    data['SetTemperature'] = data['DefaultCoolingSetTemperature']
     data = sendCommand(data)
     update(data)
 }
@@ -149,6 +154,7 @@ def heat() {
     data['EffectiveFlags'] = 287
     data['Power'] = true
     data['OperationMode'] = 1
+    data['SetTemperature'] = data['DefaultHeatingSetTemperature']
     data = sendCommand(data)
     update(data)
 }
@@ -170,26 +176,17 @@ setHeatingSetpoint(temperature)
 */
 def setCoolingSetpoint(temperature) {
     def data = retrieveDeviceState()
-    data['SetTemperature'] = temperature
+    data['DefaultCoolingSetTemperature'] = temperature
     data = sendCommand(data)
     update(data)
 }
 
 def setHeatingSetpoint(temperature) {
     def data = retrieveDeviceState()
-    data['SetTemperature'] = temperature
+    data['DefaultHeatingSetTemperature'] = temperature
     data = sendCommand(data)
     update(data)
 }
-
-def getCoolingSetpoint(temperature) {
-    return thermostatSetpoint
-}
-
-def getHeatingSetpoint(temperature) {
-    return thermostatSetpoint
-}
-
 
 def setPreset(presetNr) {
     def deviceId = device.currentValue('DeviceID')

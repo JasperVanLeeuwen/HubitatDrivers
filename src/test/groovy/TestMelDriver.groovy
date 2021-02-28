@@ -5,6 +5,18 @@ class TestMelDriver extends GroovyTestCase {
 
     private Object auth_driver = null
 
+    def originalState = null
+
+    void setUp() {
+        def meldevice = getMyMelDevice()
+        originalState = meldevice.childDevices[0].retrieveDeviceState()
+    }
+
+    void tearDown() {
+        def meldevice = getMyMelDevice()
+        meldevice.childDevices[0].sendCommand(originalState)
+    }
+
 
     void testProperties() {
         InputStream  prop_stream = TestMelDriver.class.getClassLoader().getResourceAsStream("mymelcloud.properties")
@@ -127,16 +139,14 @@ class TestMelDriver extends GroovyTestCase {
 
     void testSetHeatingSetpoint() {
         def meldevice = getMyMelDevice()
-        meldevice.childDevices[0].setThermostatMode("heat")
         meldevice.childDevices[0].setHeatingSetpoint(25)
-        assert meldevice.childDevices[0].device.currentState.thermostatSetpoint == 25
+        assert meldevice.childDevices[0].device.currentState.heatingSetpoint == 25
     }
 
     void testSetCoolingSetpoint() {
         def meldevice = getMyMelDevice()
-        meldevice.childDevices[0].setThermostatMode("heat")
         meldevice.childDevices[0].setCoolingSetpoint(15)
-        assert meldevice.childDevices[0].device.currentState.thermostatSetpoint == 15
+        assert meldevice.childDevices[0].device.currentState.coolingSetpoint == 15
     }
 
     void testGetPreset() {
